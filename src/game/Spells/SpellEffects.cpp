@@ -5745,6 +5745,7 @@ void Spell::EffectSpiritHeal(SpellEffectIndex /*eff_idx*/)
 
     if (Player* player = static_cast<Player*>(unitTarget))
     {
+        player->RemoveAurasDueToSpell(2584);
         player->ResurrectPlayer(1.0f);
         player->SpawnCorpseBones();
 
