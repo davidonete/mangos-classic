@@ -1474,7 +1474,7 @@ bool ChatHandler::HandleLookupFactionCommand(char* args)
             if (!Utf8FitTo(name, wnamepart))
             {
                 loc = 0;
-                for (; loc < MAX_LOCALE; ++loc)
+                for (; loc < MAX_DBC_LOCALE; ++loc)
                 {
                     if (loc == GetSessionDbcLocale())
                         continue;
@@ -1488,7 +1488,7 @@ bool ChatHandler::HandleLookupFactionCommand(char* args)
                 }
             }
 
-            if (loc < MAX_LOCALE)
+            if (loc < MAX_DBC_LOCALE)
             {
                 FactionState const* repState = target ? target->GetReputationMgr().GetState(factionEntry) : nullptr;
                 ShowFactionListHelper(factionEntry, LocaleConstant(loc), repState, target);
@@ -4228,7 +4228,7 @@ bool ChatHandler::HandleLearnAllRecipesCommand(char* args)
         if (!Utf8FitTo(name, wnamepart))
         {
             loc = 0;
-            for (; loc < MAX_LOCALE; ++loc)
+            for (; loc < MAX_DBC_LOCALE; ++loc)
             {
                 if (loc == GetSessionDbcLocale())
                     continue;
@@ -4242,7 +4242,7 @@ bool ChatHandler::HandleLearnAllRecipesCommand(char* args)
             }
         }
 
-        if (loc < MAX_LOCALE)
+        if (loc < MAX_DBC_LOCALE)
         {
             targetSkillInfo = skillInfo;
             break;
