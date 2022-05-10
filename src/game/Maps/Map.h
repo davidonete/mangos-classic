@@ -90,6 +90,12 @@ enum ContinentArea
     MAP1_LAST = 19,
 };
 
+enum MapCrashStatus
+{
+    MAP_CRASH_NOCRASH  = 0,
+    MAP_CRASH_CRASHED  = 1,
+};
+
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
 #if defined( __GNUC__ )
 #pragma pack(1)
@@ -157,6 +163,8 @@ class Map : public GridRefManager<NGridType>
         static void DeleteFromWorld(Player* pl);        // player object will deleted at call
 
         void VisitNearbyCellsOf(WorldObject* obj, TypeContainerVisitor<MaNGOS::ObjectUpdater, GridTypeMapContainer> &gridVisitor, TypeContainerVisitor<MaNGOS::ObjectUpdater, WorldTypeMapContainer> &worldVisitor);
+        //this wrap map udpates and call it with diff since last updates. If minimumTimeSinceLastUpdate, the thread will sleep until minimumTimeSinceLastUpdate is reached
+        void DoUpdate(uint32 maxDiff, uint32 minimumTimeSinceLastUpdate = 0);
         virtual void Update(const uint32&);
 
 #ifdef ENABLE_PLAYERBOTS
@@ -427,6 +435,9 @@ class Map : public GridRefManager<NGridType>
         void ClearBuffs(Player* player, Map* map);
         //End Solocraft Functions
 
+        //this function is overrided by InstanceMap and BattlegroundMap to handle crash recovery
+        virtual void HandleCrash() { MANGOS_ASSERT(false); }
+
     private:
         void LoadMapAndVMap(int gx, int gy);
 
@@ -462,6 +473,8 @@ class Map : public GridRefManager<NGridType>
 
         void SendObjectUpdates();
         std::set<Object*> i_objectsToClientUpdate;
+
+        uint32 GetLastMapUpdateTime() const { return _lastMapUpdate; }
 
     protected:
         MapEntry const* i_mapEntry;
@@ -501,6 +514,7 @@ class Map : public GridRefManager<NGridType>
 
         std::bitset<TOTAL_NUMBER_OF_CELLS_PER_MAP* TOTAL_NUMBER_OF_CELLS_PER_MAP> marked_cells;
 
+        mutable std::mutex i_objectsToRemove_lock;
         WorldObjectSet i_objectsToRemove;
 
         typedef std::multimap<TimePoint, ScriptAction> ScriptScheduleMap;
@@ -558,6 +572,8 @@ class Map : public GridRefManager<NGridType>
         uint32 m_activeAreasTimer;
 
         bool hasRealPlayers;
+
+        uint32 _lastMapUpdate;
 };
 
 class WorldMap : public Map
@@ -567,6 +583,7 @@ class WorldMap : public Map
     public:
         WorldMap(uint32 id, time_t expiry, uint32 InstanceId) : Map(id, expiry, InstanceId) {}
         ~WorldMap() {}
+        void HandleCrash() override;
 
         // can't be nullptr for loaded map
         WorldPersistentState* GetPersistanceState() const;
@@ -585,6 +602,7 @@ class DungeonMap : public Map
         bool Reset(InstanceResetMethod method);
         void PermBindAllPlayers(Player* player = nullptr);
         void UnloadAll(bool pForce) override;
+        void HandleCrash() override;
         void SendResetWarnings(uint32 timeLeft) const;
         void SetResetSchedule(bool on);
         uint32 GetMaxPlayers() const;
@@ -616,6 +634,7 @@ class BattleGroundMap : public Map
         bool CanEnter(Player* player) override;
         void SetUnload();
         void UnloadAll(bool pForce) override;
+        void HandleCrash() override;
 
         virtual void InitVisibilityDistance() override;
         BattleGround* GetBG() const { return m_bg; }
