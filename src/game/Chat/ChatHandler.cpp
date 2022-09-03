@@ -284,13 +284,12 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             }
             
 #ifdef ENABLE_PLAYERBOTS
-            if (player->GetPlayerbotAI())
+            if (player->GetPlayerbotAI() && lang != LANG_ADDON)
             {
                 player->GetPlayerbotAI()->HandleCommand(type, msg, *GetPlayer());
                 GetPlayer()->m_speakTime = 0;
                 GetPlayer()->m_speakCount = 0;
             }
-            else
 #endif
 
 #ifdef ENABLE_PLAYERBOTS
@@ -345,7 +344,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recv_data)
             for (GroupReference* itr = group->GetFirstMember(); itr != NULL; itr = itr->next())
             {
                 Player* player = itr->getSource();
-                if (player && player->GetPlayerbotAI())
+                if (player && player->GetPlayerbotAI() && lang != LANG_ADDON)
                 {
                     player->GetPlayerbotAI()->HandleCommand(type, msg, *GetPlayer(), lang);
                     GetPlayer()->m_speakTime = 0;
