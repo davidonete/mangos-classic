@@ -19551,7 +19551,6 @@ void Player::learnClassLevelSpells(bool includeHighLevelQuestRewards)
     ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(getClass());
     if (!clsEntry)
         return;
-
     uint32 family = clsEntry->spellfamily;
 
     // special cases which aren't sourced from trainers and normally require quests to obtain - added here for convenience
