@@ -993,8 +993,8 @@ void Map::Update(const uint32& t_diff)
 
     bool hasPlayers = false;
     uint32 activeChars = 0;
-    uint32 maxDiff = sWorld.GetMaxDiff();
-    bool updateAI = urand(0, (HasRealPlayers() ? maxDiff : (maxDiff * 3))) < 10;
+    uint32 avgDiff = sWorld.GetAverageDiff();
+    bool updateAI = urand(0, (HasRealPlayers() ? avgDiff : (avgDiff * 3))) < 10;
     /// update players at tick
     for (m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
     {
@@ -1019,7 +1019,7 @@ void Map::Update(const uint32& t_diff)
 
                 /*if (isInActiveArea)
                 {
-                    if (maxDiff > 200 && IsContinent())
+                    if (avgDiff > 200 && IsContinent())
                     {
                         if (find(m_activeZones.begin(), m_activeZones.end(), plr->GetZoneId()) == m_activeZones.end())
                             isInActiveArea = false;
@@ -1065,7 +1065,7 @@ void Map::Update(const uint32& t_diff)
     }
 
     // non-player active objects
-    bool updateObj = urand(0, (HasRealPlayers() ? maxDiff : (maxDiff * 3))) < 10;
+    bool updateObj = urand(0, (HasRealPlayers() ? avgDiff : (avgDiff * 3))) < 10;
     if (!m_activeNonPlayers.empty())
     {
         for (m_activeNonPlayersIter = m_activeNonPlayers.begin(); m_activeNonPlayersIter != m_activeNonPlayers.end();)
@@ -1081,7 +1081,7 @@ void Map::Update(const uint32& t_diff)
                 continue;
 
             // skip objects if world is laggy
-            if (IsContinent() && maxDiff > 100)
+            if (IsContinent() && avgDiff > 100)
             {
                 bool isInActiveArea = false;
 
@@ -1093,7 +1093,7 @@ void Map::Update(const uint32& t_diff)
 
                 if (isInActiveArea && IsContinent())
                 {
-                    if (maxDiff > 150 && find(m_activeZones.begin(), m_activeZones.end(), obj->GetZoneId()) == m_activeZones.end())
+                    if (avgDiff > 150 && find(ActiveZones.begin(), ActiveZones.end(), obj->GetZoneId()) == ActiveZones.end())
                         isInActiveArea = false;
                 }
 
