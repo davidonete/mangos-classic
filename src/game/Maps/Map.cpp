@@ -39,6 +39,8 @@
 #include "Chat/Chat.h"
 #include "Weather/Weather.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
+#include "Errors.h"
+#pragma init_seg(lib)
 
 #ifdef BUILD_METRICS
  #include "Metric/Metric.h"
@@ -1008,6 +1010,7 @@ void Map::Update(const uint32& t_diff)
             }
         }
     }
+#endif
 
     // Reset the has real players flag and check for it again
     const bool hadRealPlayers = hasRealPlayers;
@@ -1092,7 +1095,6 @@ void Map::Update(const uint32& t_diff)
         sLog.outBasic("Map %u: Active Zone Players - %u of %u", GetId(), activePlayers, m_mapRefManager.getSize());
     }
 #endif
-
     for (m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
     {
         Player* player = m_mapRefIter->getSource();
@@ -1143,6 +1145,7 @@ void Map::Update(const uint32& t_diff)
 
     // non-player active objects
     bool updateObj = urand(0, (HasRealPlayers() ? avgDiff : (avgDiff * 3))) < 10;
+#endif
     if (!m_activeNonPlayers.empty())
     {
         for (m_activeNonPlayersIter = m_activeNonPlayers.begin(); m_activeNonPlayersIter != m_activeNonPlayers.end();)
@@ -1168,7 +1171,6 @@ void Map::Update(const uint32& t_diff)
                 }
             }
 #endif
-
             objToUpdate.insert(obj);
 
             // lets update mobs/objects in ALL visible cells around player!
