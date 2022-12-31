@@ -39,6 +39,8 @@
 #include "Chat/Chat.h"
 #include "Weather/Weather.h"
 #include "AI/ScriptDevAI/ScriptDevAIMgr.h"
+#include "Errors.h"
+#pragma init_seg(lib)
 
 #ifdef BUILD_METRICS
  #include "Metric/Metric.h"
@@ -973,6 +975,7 @@ void Map::Update(const uint32& t_diff)
         m_activeZones.clear();
     }
 
+#ifdef ENABLE_PLAYERBOTS
     if (!m_activeAreasTimer && IsContinent() && HasRealPlayers())
     {
         for (m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
@@ -1002,17 +1005,21 @@ void Map::Update(const uint32& t_diff)
             }
         }
     }
+#endif
 
     bool hasPlayers = false;
     uint32 activeChars = 0;
     uint32 avgDiff = sWorld.GetAverageDiff();
+#ifdef ENABLE_PLAYERBOTS
     bool updateAI = urand(0, (HasRealPlayers() ? avgDiff : (avgDiff * 3))) < 10;
+#endif
     /// update players at tick
     for (m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
     {
         Player* plr = m_mapRefIter->getSource();
         if (plr && plr->IsInWorld())
         {
+#ifdef ENABLE_PLAYERBOTS
             bool isInActiveArea = false;
             if (!plr->GetPlayerbotAI() || plr->GetPlayerbotAI()->IsRealPlayer())
             {
@@ -1045,12 +1052,15 @@ void Map::Update(const uint32& t_diff)
 
             if (isInActiveArea)
                 activeChars++;
+#endif
 
             plr->Update(t_diff);
+#ifdef ENABLE_PLAYERBOTS
             plr->UpdateAI(t_diff, !(isInActiveArea || updateAI || plr->IsInCombat()));
+#endif
         }
     }
-
+#ifdef ENABLE_PLAYERBOTS
     hasRealPlayers = hasPlayers;
 
     if (IsContinent() && HasRealPlayers() && HasActiveAreas() && !m_activeAreasTimer)
@@ -1058,7 +1068,7 @@ void Map::Update(const uint32& t_diff)
         sLog.outBasic("Map %u: Active Areas:Zones - %u:%u", GetId(), m_activeAreas.size(), m_activeZones.size());
         sLog.outBasic("Map %u: Active Areas Chars - %u of %u", GetId(), activeChars, m_mapRefManager.getSize());
     }
-
+#endif
     for (m_mapRefIter = m_mapRefManager.begin(); m_mapRefIter != m_mapRefManager.end(); ++m_mapRefIter)
     {
         Player* player = m_mapRefIter->getSource();
@@ -1089,9 +1099,10 @@ void Map::Update(const uint32& t_diff)
         if (WorldObject* viewPoint = GetWorldObject(player->GetFarSightGuid()))
             VisitNearbyCellsOf(viewPoint, grid_object_update, world_object_update);
     }
-
+#ifdef ENABLE_PLAYERBOTS
     // non-player active objects
     bool updateObj = urand(0, (HasRealPlayers() ? avgDiff : (avgDiff * 3))) < 10;
+#endif
     if (!m_activeNonPlayers.empty())
     {
         for (m_activeNonPlayersIter = m_activeNonPlayers.begin(); m_activeNonPlayersIter != m_activeNonPlayers.end();)
@@ -1105,7 +1116,7 @@ void Map::Update(const uint32& t_diff)
 
             if (!obj->IsInWorld() || !obj->IsPositionValid())
                 continue;
-
+#ifdef ENABLE_PLAYERBOTS
             // skip objects if world is laggy
             if (IsContinent() && avgDiff > 100)
             {
@@ -1126,7 +1137,7 @@ void Map::Update(const uint32& t_diff)
                 if (!isInActiveArea && !updateObj)
                     continue;
             }
-
+#endif
             objToUpdate.insert(obj);
 
             // lets update mobs/objects in ALL visible cells around player!
