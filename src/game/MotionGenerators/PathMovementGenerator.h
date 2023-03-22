@@ -30,7 +30,6 @@ class AbstractPathMovementGenerator : public MovementGenerator
 {
     public:
         explicit AbstractPathMovementGenerator(const Movement::PointsArray& path, float orientation = 0, int32 offset = 0, bool cyclic = true);
-
         explicit AbstractPathMovementGenerator(const WaypointPath* path, int32 offset = 0, bool cyclic = false, ObjectGuid guid = ObjectGuid());
 
         void Initialize(Unit& owner) override;
