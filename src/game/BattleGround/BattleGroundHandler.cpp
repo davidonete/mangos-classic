@@ -163,7 +163,16 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket& recv_data)
         uint32 err = grp->CanJoinBattleGroundQueue(bgTypeId, bgQueueTypeId, 0, bg->GetMaxPlayersPerTeam());
         isPremade = sWorld.getConfig(CONFIG_UINT32_BATTLEGROUND_PREMADE_GROUP_WAIT_FOR_MATCH) &&
                     (grp->GetMembersCount() >= bg->GetMinPlayersPerTeam());
-        if (err != BG_JOIN_ERR_OK)
+
+        if (err == BG_JOIN_ERR_GROUP_DESERTER)
+        {
+            WorldPacket data;
+            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(data, BG_GROUPJOIN_DESERTERS);
+            _player->GetSession()->SendPacket(data);
+            SendBattleGroundJoinError(err);
+            return;
+        }
+        else if (err != BG_JOIN_ERR_OK)
         {
             SendBattleGroundJoinError(err);
             return;
@@ -193,7 +202,7 @@ void WorldSession::HandleBattlemasterJoinOpcode(WorldPacket& recv_data)
             // send status packet (in queue)
             sBattleGroundMgr.BuildBattleGroundStatusPacket(data, bg, queueSlot, STATUS_WAIT_QUEUE, avgTime, 0);
             member->GetSession()->SendPacket(data);
-            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(data, bgTypeId);
+            sBattleGroundMgr.BuildGroupJoinedBattlegroundPacket(data, bg->GetMapId());
             member->GetSession()->SendPacket(data);
             DEBUG_LOG("Battleground: player joined queue for bg queue type %u bg type %u: GUID %u, NAME %s", bgQueueTypeId, bgTypeId, member->GetGUIDLow(), member->GetName());
         }
