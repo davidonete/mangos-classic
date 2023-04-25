@@ -64,6 +64,13 @@ enum BattleGroundQueueGroupTypes
     BG_QUEUE_NORMAL_HORDE       = 3
 };
 
+enum BattleGroundGroupJoinStatus
+{
+    BG_GROUPJOIN_DESERTERS = -2,
+    BG_GROUPJOIN_FAILED = -1    // actually, any negative except 2
+    // any other value is a MapID meaning successful join
+};
+
 #define BG_QUEUE_GROUP_TYPES_COUNT 4
 
 class BattleGround;
@@ -191,7 +198,7 @@ class BattleGroundMgr
         void BuildPlayerJoinedBattleGroundPacket(WorldPacket& /*data*/, Player* /*player*/) const;
         void BuildPlayerLeftBattleGroundPacket(WorldPacket& /*data*/, ObjectGuid /*guid*/) const;
         void BuildBattleGroundListPacket(WorldPacket& /*data*/, ObjectGuid /*guid*/, Player* /*player*/, BattleGroundTypeId /*bgTypeId*/) const;
-        void BuildGroupJoinedBattlegroundPacket(WorldPacket& /*data*/, BattleGroundTypeId /*bgTypeId*/) const;
+        void BuildGroupJoinedBattlegroundPacket(WorldPacket& /*data*/, int32 /*status*/) const;
         void BuildUpdateWorldStatePacket(WorldPacket& /*data*/, uint32 /*field*/, uint32 /*value*/) const;
         void BuildPvpLogDataPacket(WorldPacket& /*data*/, BattleGround* /*bg*/) const;
         void BuildBattleGroundStatusPacket(WorldPacket& /*data*/, BattleGround* /*bg*/, uint8 /*queueSlot*/, uint8 /*statusId*/, uint32 /*time1*/, uint32 /*time2*/) const;
