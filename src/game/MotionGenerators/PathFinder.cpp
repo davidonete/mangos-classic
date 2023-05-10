@@ -436,6 +436,12 @@ void PathFinder::BuildPolyPath(const Vector3& startPos, const Vector3& endPos)
                 buildShotrcut = true;
         }
 
+        if (m_sourceUnit && m_sourceUnit->IsPlayer() && IsPointHigherThan(getActualEndPosition(), getStartPosition()))
+        {
+            sLog.outDebug("%s (%u) Path Shortcut skipped: endPoint is higher", m_sourceUnit->GetName(), m_sourceUnit->GetGUIDLow());
+            buildShotrcut = false;
+        }
+
         if (buildShotrcut)
         {
             BuildShortcut();
@@ -700,6 +706,14 @@ void PathFinder::BuildPolyPath(const Vector3& startPos, const Vector3& endPos)
             // only happens if we passed bad data to findPath(), or navmesh is messed up
             if (m_sourceUnit)
                 sLog.outError("%u's Path Build failed: 0 length path", m_sourceUnit->GetGUIDLow());
+
+            // do not build shortcut for player if endPos is higher or in Battleground
+            if (m_sourceUnit && m_sourceUnit->IsPlayer() && IsPointHigherThan(getActualEndPosition(), getStartPosition()))
+            {
+                sLog.outDebug("%s (%u) Path Shortcut skipped: endPoint is higher", m_sourceUnit->GetName(), m_sourceUnit->GetGUIDLow());
+                return;
+            }
+
             BuildShortcut();
             m_type = PATHFIND_NOPATH;
             return;
@@ -944,6 +958,11 @@ void PathFinder::BuildShortcut()
     NormalizePath();
 
     m_type = PATHFIND_SHORTCUT;
+}
+
+bool PathFinder::IsPointHigherThan(const Vector3& posOne, const Vector3& posTwo)
+{
+    return posOne.z > posTwo.z;
 }
 
 void PathFinder::createFilter()
