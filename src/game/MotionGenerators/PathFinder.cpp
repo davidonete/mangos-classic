@@ -288,7 +288,7 @@ void PathFinder::setAreaCost(uint32 area, float cost)
     m_filter.setAreaCost(area, cost);
 }
 
-dtPolyRef PathFinder::getPathPolyByPosition(const dtPolyRef* polyPath, uint32 polyPathSize, const float* point, float* distance) const
+dtPolyRef PathFinder::getPathPolyByPosition(const dtPolyRef* polyPath, uint32 polyPathSize, const float* point, float* distance, const float maxDist) const
 {
     if (!polyPath || !polyPathSize)
         return INVALID_POLYREF;
