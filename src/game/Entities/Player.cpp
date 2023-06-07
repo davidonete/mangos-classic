@@ -6673,7 +6673,7 @@ void Player::UpdateHonor()
     std::optional<HonorStanding> standing = sObjectMgr.GetHonorStandingByGUID(GetGUIDLow(), GetTeam());
     float rankP = GetStoredHonor();
     if (standing)
-        rankP += standing->rpEarning;
+        rankP += standing.rpEarning;
 
     SetRankPoints(rankP);
 
@@ -14295,6 +14295,8 @@ void Player::_LoadForgottenSkills(QueryResult* result)
 
             m_forgottenSkills.insert(std::make_pair(skill, value));
         } while (result->NextRow());
+
+        delete result;
     }
 }
 
@@ -15558,6 +15560,8 @@ void Player::_LoadTalents(QueryResult* result)
 
             addTalent(fields[0].GetUInt32(), fields[1].GetUInt8(), false);
         } while (result->NextRow());
+
+        delete result;
     }
 }
 
@@ -21371,7 +21375,11 @@ std::string Player::GetSpecName(uint8 spec)
     if (!result)
         return "NULL";
 
-    return (*result)[0].GetString();
+    string specName = (*result)[0].GetString();
+
+    delete result;
+
+    return specName;
 }
 
 void Player::SetSpecName(uint8 spec, const char* specName)
