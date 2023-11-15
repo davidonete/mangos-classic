@@ -246,7 +246,7 @@ class CharacterHandler
 #endif
             session->HandlePlayerLogin((LoginQueryHolder*)holder);
 #ifdef ENABLE_PLAYERBOTS
-            Player* player = sObjectMgr.GetPlayer(guid, true);
+            Player* player = session->GetPlayer();
             if (player)
             {
                 player->SetPlayerbotMgr(new PlayerbotMgr(player));
