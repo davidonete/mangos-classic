@@ -38,7 +38,7 @@ struct LFGPlayerQueueInfo
     uint8 playerClass;
     std::list<std::pair<LfgRoles, LfgRolePriority>> rolePriority;
 
-    void CalculateRoles(Classes playerClass);
+    void CalculateRoles(Classes plrClass);
     void CalculateTalentRoles(Player* player);
     LfgRolePriority GetRolePriority(LfgRoles role);
 };
@@ -90,7 +90,7 @@ class LFGQueue
 
         void LoadMeetingStones();
         MeetingStoneSet GetDungeonsForPlayer(Player* player);
-        void TeleportGroupToStone(Group* grp, uint32 areaId);
+        void TeleportGroupToStone(uint32 groupId, uint32 areaId);
     private:
         void FindInArea(std::list<ObjectGuid>& players, uint32 area, uint32 team, ObjectGuid const& exclude);
         bool FindRoleToGroup(ObjectGuid playerGuid, uint32 groupId, LfgRoles role);
