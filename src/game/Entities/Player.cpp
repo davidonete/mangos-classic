@@ -14754,8 +14754,7 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
     m_specsCount = fields[55].GetUInt32();
     m_activeSpec = fields[56].GetUInt32();
 
-    QueryResult* actionResult = CharacterDatabase.PQuery("SELECT button, action, type FROM character_action WHERE guid = '%u' AND spec = '%u' ORDER BY button", GetGUIDLow(), m_activeSpec);
-    _LoadActions(actionResult);
+    _LoadActions(holder->GetResult(PLAYER_LOGIN_QUERY_LOADACTIONS));
 
     _LoadForgottenSkills(holder->GetResult(PLAYER_LOGIN_QUERY_FORGOTTEN_SKILLS));
 
@@ -14918,6 +14917,10 @@ void Player::_LoadActions(std::unique_ptr<QueryResult> queryResult)
             uint8 button = fields[0].GetUInt8();
             uint32 action = fields[1].GetUInt32();
             uint8 type = fields[2].GetUInt8();
+            uint32 spec = fields[3].GetUInt32();
+
+            if (spec != m_activeSpec)
+                continue;
 
             if (ActionButton* ab = addActionButton(button, action, type))
                 ab->uState = ACTIONBUTTON_UNCHANGED;
@@ -15526,8 +15529,6 @@ void Player::_LoadTalents(std::unique_ptr<QueryResult> result)
 
             addTalent(fields[0].GetUInt32(), fields[1].GetUInt8(), false);
         } while (result->NextRow());
-
-        delete result;
     }
 }
 
@@ -21340,13 +21341,11 @@ std::string Player::GetSpecName(uint8 spec)
     if (specNames[spec] != "")
         return specNames[spec];
 
-    QueryResult* result = CharacterDatabase.PQuery("SELECT name FROM character_talent_name WHERE guid='%u' AND spec='%u'", GetGUIDLow(), spec);
+    auto result = CharacterDatabase.PQuery("SELECT name FROM character_talent_name WHERE guid='%u' AND spec='%u'", GetGUIDLow(), spec);
     if (!result)
         return "NULL";
 
     string specName = (*result)[0].GetString();
-
-    delete result;
 
     return specName;
 }
