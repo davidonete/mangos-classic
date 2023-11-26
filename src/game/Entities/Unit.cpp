@@ -1031,6 +1031,7 @@ uint32 Unit::DealDamage(Unit* dealer, Unit* victim, uint32 damage, CleanDamage c
 #endif
     }
     else                                                    // if (health <= damage)
+    {
         HandleDamageDealt(dealer, victim, damage, cleanDamage, damagetype, damageSchoolMask, spellInfo, duel_hasEnded);
 
 #ifdef USE_ACHIEVEMENTS
