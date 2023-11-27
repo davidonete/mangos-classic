@@ -60,7 +60,7 @@ class ReputationMgr
         explicit ReputationMgr(Player* owner) : m_player(owner) {}
         ~ReputationMgr() {}
 
-        void SaveToDB();
+        void SaveToDB(bool queued = true);
         void LoadFromDB(std::unique_ptr<QueryResult> queryResult);
     public:                                                 // statics
         static const int32 PointsInRank[MAX_REPUTATION_RANK];

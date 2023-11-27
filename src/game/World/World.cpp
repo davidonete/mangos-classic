@@ -859,6 +859,10 @@ void World::LoadConfigSettings(bool reload)
     setConfig(CONFIG_FLOAT_HARDCORE_LEVEL_DOWN, "Hardcore.LevelDown", 0.0f);
     // End Hardcore Config
 
+    // Start Custom DB Optimization Config
+    setConfig(CONFIG_BOOL_OPTIMIZATION_QUEUE_PLAYER_LOGIN, "Optimization.QueuePlayerLogin", true);
+    // End Custom DB Optimization Config
+
     // Start Immersive Config
     setConfig(CONFIG_BOOL_IMMERSIVE_ENABLED, "Immersive.Enable", false);
     setConfig(CONFIG_BOOL_IMMERSIVE_MANUAL_ATTRIBUTES, "Immersive.ManualAttributes", false);
