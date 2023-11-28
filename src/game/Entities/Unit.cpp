@@ -10823,6 +10823,37 @@ void Unit::KnockBackWithAngle(float angle, float horizontalSpeed, float vertical
     return;
 }
 
+void LocalizeThreatUnitName(uint32 number, const Unit* unit, std::stringstream& outData)
+{
+    outData.clear();
+    outData.str(std::string());
+
+    if (unit)
+    {
+        // Only for creatures
+        if (unit->IsCreature())
+        {
+            outData << number << ": localize_name[";
+            for (int32 localeIdx = 0; localeIdx < MAX_LOCALE; localeIdx++)
+            {
+                if (localeIdx == 0)
+                {
+                    outData << localeIdx << "_" << unit->GetNameForLocaleIdx(localeIdx);
+                }
+                else
+                {
+                    outData << ";" << localeIdx << "_" << unit->GetNameForLocaleIdx(localeIdx);
+                }
+            }
+            outData << "]" << unit->GetLevel() << std::dec;
+        }
+        else
+        {
+            outData << number << ": " << unit->GetName() << unit->GetLevel() << std::dec;
+        }
+    }
+}
+
 void Unit::SendThreatUpdate()
 {
     ThreatList const& tlist = getThreatManager().getThreatList();
@@ -10837,10 +10868,11 @@ void Unit::SendThreatUpdate()
         data.str(std::string());
         data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << GetObjectGuid() << std::dec;
         SendMessageToSet(data.str(), true);
-        data.clear();
-        data.str(std::string());
-        data << number << ": " << GetName() << GetLevel() << std::dec;
+
+        // Localize unit names
+        LocalizeThreatUnitName(number, this, data);
         SendMessageToSet(data.str(), false);
+
         data.clear();
         data.str(std::string());
         data << number << ": " << uint32(count);
@@ -10851,10 +10883,11 @@ void Unit::SendThreatUpdate()
         {
             data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << itr->getUnitGuid() << std::dec;
             SendMessageToSet(data.str(), true);
-            data.clear();
-            data.str(std::string());
-            data << number << ": " << itr->getTarget()->GetName() << itr->getTarget()->GetLevel() << std::dec;
+
+            // Localize unit names (only for creatures)
+            LocalizeThreatUnitName(number, itr->getTarget(), data);
             SendMessageToSet(data.str(), false);
+
             data.clear();
             data.str(std::string());
             data << number << ": " << uint32(itr->getThreat());
@@ -10881,10 +10914,11 @@ void Unit::SendHighestThreatUpdate(HostileReference* pHostileReference)
         data.str(std::string());
         data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << GetObjectGuid() << std::dec;
         SendMessageToSet(data.str(), true);
-        data.clear();
-        data.str(std::string());
-        data << number << ": " << GetName() << GetLevel() << std::dec;
+
+        // Localize unit names
+        LocalizeThreatUnitName(number, this, data);
         SendMessageToSet(data.str(), false);
+
         data.clear();
         data.str(std::string());
         data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << pHostileReference->getUnitGuid() << std::dec;
@@ -10903,10 +10937,11 @@ void Unit::SendHighestThreatUpdate(HostileReference* pHostileReference)
         {
             data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << itr->getUnitGuid() << std::dec;
             SendMessageToSet(data.str(), true);
-            data.clear();
-            data.str(std::string());
-            data << number << ": " << itr->getTarget()->GetName() << itr->getTarget()->GetLevel() << std::dec;
+
+            // Localize unit names
+            LocalizeThreatUnitName(number, itr->getTarget(), data);
             SendMessageToSet(data.str(), false);
+
             data.clear();
             data.str(std::string());
             data << number << ": " << uint32(itr->getThreat());
@@ -10930,10 +10965,11 @@ void Unit::SendThreatClear() const
     data.str(std::string());
     data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << GetObjectGuid() << std::dec;
     SendMessageToSet(data.str(), true);
-    data.clear();
-    data.str(std::string());
-    data << number << ": " << GetName() << GetLevel() << std::dec;
+
+    // Localize unit names
+    LocalizeThreatUnitName(number, this, data);
     SendMessageToSet(data.str(), false);
+
     data.clear();
     data.str(std::string());
     data << number << ": END";
@@ -10951,10 +10987,11 @@ void Unit::SendThreatRemove(HostileReference* pHostileReference) const
     data.str(std::string());
     data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << GetObjectGuid() << std::dec;
     SendMessageToSet(data.str(), true);
-    data.clear();
-    data.str(std::string());
-    data << number << ": " << GetName() << GetLevel() << std::dec;
+
+    // Localize unit names
+    LocalizeThreatUnitName(number, this, data);
     SendMessageToSet(data.str(), false);
+
     data.clear();
     data.str(std::string());
     data << number << ": " << std::uppercase << "0x" << std::setfill('0') << std::setw(16) << std::hex << pHostileReference->getUnitGuid() << std::dec;
