@@ -596,10 +596,24 @@ void WorldSession::HandleBotPackets()
 {
     while (!m_recvQueue.empty())
     {
+        if (_player)
+            _player->SetCanDelayTeleport(true);
+
         auto const packet = std::move(m_recvQueue.front());
         m_recvQueue.pop_front();
         OpcodeHandler const& opHandle = opcodeTable[packet->GetOpcode()];
         (this->*opHandle.handler)(*packet);
+
+        if (_player)
+        {
+            // can be not set in fact for login opcode, but this not create porblems.
+            _player->SetCanDelayTeleport(false);
+
+            // we should execute delayed teleports only for alive(!) players
+            // because we don't want player's ghost teleported from graveyard
+            if (_player->IsHasDelayedTeleport())
+                _player->TeleportTo(_player->m_teleport_dest, _player->m_teleport_options);
+        }
     }
 }
 #endif
