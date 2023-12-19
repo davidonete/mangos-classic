@@ -3976,6 +3976,7 @@ void Spell::WriteSpellGoTargets(WorldPacket& data)
     // m_needAliveTargetMask req for stop channeling if one target die
     uint32 hit = m_UniqueGOTargetInfo.size();              // Always hits on GO
     uint32 miss = 0;
+    bool isAoESpell = IsAreaOfEffectSpell(m_spellInfo);
 
     for (auto& ihit : m_UniqueTargetInfo)
     {
@@ -3984,8 +3985,11 @@ void Spell::WriteSpellGoTargets(WorldPacket& data)
             // possibly SPELL_MISS_IMMUNE2 for this??
             if (IsChanneledSpell(m_spellInfo) && ihit.targetGUID == m_targets.getUnitTargetGuid()) // can happen due to DR
             {
-                m_duration = 0;                              // cancel aura to avoid visual effect continue
-                ihit.effectDuration = 0;
+                if (!isAoESpell) // if it's an AoE spell we do not cancel the cast if we miss
+                {
+                    m_duration = 0;                              // cancel aura to avoid visual effect continue
+                    ihit.effectDuration = 0;
+                }
             }
             ihit.missCondition = SPELL_MISS_IMMUNE2;
             ++miss;
@@ -4003,8 +4007,11 @@ void Spell::WriteSpellGoTargets(WorldPacket& data)
         {
             if (IsChanneledSpell(m_spellInfo) && (ihit.missCondition == SPELL_MISS_RESIST || ihit.missCondition == SPELL_MISS_REFLECT))
             {
-                m_duration = 0;                              // cancel aura to avoid visual effect continue
-                ihit.effectDuration = 0;
+                if (!isAoESpell) // if it's an AoE spell we do not cancel the cast if we miss
+                {
+                    m_duration = 0;                              // cancel aura to avoid visual effect continue
+                    ihit.effectDuration = 0;
+                }
             }
             ++miss;
         }

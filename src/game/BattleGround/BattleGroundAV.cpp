@@ -675,6 +675,10 @@ void BattleGroundAV::ProcessPlayerDefendsPoint(Player* player, AVNodeIds node)
     uint32 objId     = isTower ? 64 : 65;
 
     // process world state
+    if (!isTower)
+    {
+        GetBgMap()->GetGraveyardManager().SetGraveYardLinkTeam(avNodeDefaults[node].graveyardId, BG_AV_ZONE_MAIN, GetTeamIdByTeamIndex(teamIdx));
+    }
 
     // send yell and sound
     DoSendYellToTeam(teamIdx, yellId, node);
