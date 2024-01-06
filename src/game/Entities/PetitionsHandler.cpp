@@ -274,6 +274,7 @@ void WorldSession::SendPetitionQueryOpcode(ObjectGuid petitionguid) const
     data << uint32(0);                                      // 11
     data << uint32(0);                                      // 13 count of next strings?
     data << uint32(0);                                      // 14
+    data << uint32(0);
     SendPacket(data);
 }
 
