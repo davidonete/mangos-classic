@@ -761,7 +761,6 @@ class ChatHandler
         bool HandlePlayerbotCommand(char* args);
         bool HandleRandomPlayerbotCommand(char* args);
         bool HandleAhBotCommand(char* args);
-        bool HandleGuildTaskCommand(char* args);
         bool HandlePerfMonCommand(char* args);
 #endif
 
