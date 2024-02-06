@@ -86,8 +86,11 @@
 #include "AchievementsMgr.h"
 #endif
 
+#ifdef ENABLE_HARDCORE
+#include "HardcoreMgr.h"
+#endif
+
 #include <cmath>
-#include "Hardcore/HardcoreMgr.h"
 
 #define ZONE_UPDATE_INTERVAL (1*IN_MILLISECONDS)
 
@@ -879,6 +882,10 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
 
 #ifdef ENABLE_ACHIEVEMENTS
     sAchievementsMgr.OnPlayerCharacterCreated(this);
+#endif
+
+#ifdef ENABLE_HARDCORE
+    sHardcoreMgr.OnPlayerCharacterCreated(this);
 #endif
 
     LearnDefaultSkills();
@@ -4340,6 +4347,10 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
 #ifdef ENABLE_ACHIEVEMENTS
             sAchievementsMgr.OnPlayerDeletedFromDB(lowguid);
 #endif
+
+#ifdef ENABLE_HARDCORE
+            sHardcoreMgr.OnPlayerCharacterDeletedFromDB(lowguid);
+#endif
             break;
         }
         // The character gets unlinked from the account, the name gets freed up and appears as deleted ingame
@@ -4441,10 +4452,10 @@ void Player::BuildPlayerRepop()
 
 void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 {
-    if(!sHardcoreMgr.CanRevive(this))
-    {
+#ifdef ENABLE_HARDCORE
+    if (!sHardcoreMgr.OnPlayerPreResurrect(this))
         return;
-    }
+#endif
 
     SetDeathState(ALIVE);
 
@@ -4479,7 +4490,9 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
         if (InstanceData* instanceData = GetMap()->GetInstanceData())
             instanceData->OnPlayerResurrect(this);
 
-    sHardcoreMgr.OnPlayerRevived(this);
+#ifdef ENABLE_HARDCORE
+    sHardcoreMgr.OnPlayerResurrect(this);
+#endif
 
 #ifdef ENABLE_IMMERSIVE
     sImmersiveMgr.OnPlayerResurrect(this);
@@ -4869,7 +4882,9 @@ void Player::RepopAtGraveyard()
             UpdateVisibilityAndView();
     }
 
+#ifdef ENABLE_HARDCORE
     sHardcoreMgr.OnPlayerReleaseSpirit(this, ClosestGrave);
+#endif
 }
 
 void Player::JoinedChannel(Channel* c)
@@ -10065,7 +10080,6 @@ Item* Player::StoreNewItem(ItemPosCountVec const& dest, uint32 item, bool update
     Item* pItem = Item::CreateItem(item, count, this, randomPropertyId);
     if (pItem)
     {
-        sHardcoreMgr.OnItemLooted(loot, pItem, this);
         ItemAddedQuestCheck(item, count);
         pItem = StoreItem(dest, pItem, update);
 
