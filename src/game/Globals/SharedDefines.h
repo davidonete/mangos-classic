@@ -2102,4 +2102,9 @@ enum MovementEvent
     EVENT_FALL   = 10002,
 };
 
+// DUALSPEC MOD
+// https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+#define MAX_TALENT_RANK 5
+#define MAX_TALENT_SPECS 2
+
 #endif

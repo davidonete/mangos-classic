@@ -118,7 +118,16 @@ struct PlayerSpell
     bool disabled          : 1;                             // first rank has been learned in result talent learn but currently talent unlearned, save max learned ranks
 };
 
+// DUALSPEC MOD
+// https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+struct PlayerTalent
+{
+    PlayerSpellState state : 8;
+    uint8 spec : 8;
+};
+
 typedef std::unordered_map<uint32, PlayerSpell> PlayerSpellMap;
+typedef std::unordered_map<uint32, PlayerTalent> PlayerTalentMap;
 
 struct SpellCooldown
 {
@@ -714,6 +723,9 @@ enum PlayerLoginQueryIndex
     PLAYER_LOGIN_QUERY_LOADBGDATA,
     PLAYER_LOGIN_QUERY_LOADACCOUNTDATA,
     PLAYER_LOGIN_QUERY_LOADSKILLS,
+    // DUALSPEC MOD
+    // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+    PLAYER_LOGIN_QUERY_LOADTALENTS,
     PLAYER_LOGIN_QUERY_LOADMAILS,
     PLAYER_LOGIN_QUERY_LOADMAILEDITEMS,
     PLAYER_LOGIN_QUERY_LOADWEEKLYQUESTSTATUS,
@@ -1469,6 +1481,9 @@ class Player : public Unit
         std::pair<float, float> RequestFollowData(ObjectGuid guid);
         void RelinquishFollowData(ObjectGuid guid);
 
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        bool HasTalent(uint32 spell, uint8 spec) const;
         bool HasSpell(uint32 spell) const override;
         bool HasActiveSpell(uint32 spell) const;            // show in spellbook
         TrainerSpellState GetTrainerSpellState(TrainerSpell const* trainer_spell, uint32 reqLevel) const;
@@ -1492,6 +1507,9 @@ class Player : public Unit
 #ifdef ENABLE_MANGOSBOTS
         void learnClassLevelSpells(bool includeHighLevelQuestRewards = false);
 #endif
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        void addTalent(uint32 spellId, uint8 spec, bool learning);
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
         void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1, points); }
@@ -1519,6 +1537,22 @@ class Player : public Unit
         void SetSpellClass(uint8 playerClass);
         SpellFamily GetSpellClass() const { return m_spellClassName; } // client function equivalent - says what player can cast
 
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        // dual spec
+        uint8 m_activeSpec;
+        uint8 m_specsCount;
+
+        void ActivateSpec(uint8 spec);
+        uint8 GetActiveSpec() { return m_activeSpec; }
+        void SetActiveSpec(uint8 spec) { m_activeSpec = spec; }
+        uint8 GetSpecsCount() { return m_specsCount; }
+        void SetSpecsCount(uint8 count) { m_specsCount = count; }
+
+        std::string GetSpecName(uint8 spec);
+        void SetSpecName(uint8 spec, const char* specName);
+        std::string specNames[MAX_TALENT_SPECS];
+
         void setResurrectRequestData(ObjectGuid guid, uint32 mapId, float X, float Y, float Z, uint32 health, uint32 mana)
         {
             m_resurrectGuid = guid;
@@ -1543,7 +1577,10 @@ class Player : public Unit
         static bool IsActionButtonDataValid(uint8 button, uint32 action, uint8 type, Player* player);
         ActionButton* addActionButton(uint8 button, uint32 action, uint8 type);
         void removeActionButton(uint8 button);
-        void SendInitialActionButtons() const;
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        void SendInitialActionButtons() const { SendActionButtons(1); }
+        void SendActionButtons(uint32 state) const;
 
         PvPInfo pvpInfo;
         void UpdatePvP(bool state, bool overriding = false);
@@ -2304,6 +2341,9 @@ class Player : public Unit
         void _LoadWeeklyQuestStatus(std::unique_ptr<QueryResult> queryResult);
         void _LoadGroup(std::unique_ptr<QueryResult> queryResult);
         void _LoadSkills(std::unique_ptr<QueryResult> queryResult);
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        void _LoadTalents(std::unique_ptr<QueryResult> queryResult);
         void _LoadSpells(std::unique_ptr<QueryResult> queryResult);
         bool _LoadHomeBind(std::unique_ptr<QueryResult> queryResult);
         void _LoadBGData(std::unique_ptr<QueryResult> queryResult);
@@ -2324,6 +2364,10 @@ class Player : public Unit
         void _SaveQuestStatus();
         void _SaveWeeklyQuestStatus();
         void _SaveSkills();
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        void _SaveTalents();
+        void _SaveTalentSpecNames();
         void _SaveSpells();
         void _SaveBGData();
         void _SaveStats();
@@ -2390,6 +2434,9 @@ class Player : public Unit
 
         PlayerMails m_mail;
         PlayerSpellMap m_spells;
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e
+        PlayerTalentMap m_talents[MAX_TALENT_SPECS];
 
         ActionButtonList m_actionButtons;
 

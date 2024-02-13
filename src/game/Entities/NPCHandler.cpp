@@ -393,6 +393,20 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
         if (!sScriptDevAIMgr.OnGossipSelect(_player, pGo, sender, action, code.empty() ? nullptr : code.c_str()))
             _player->OnGossipSelect(pGo, gossipListId);
     }
+    // DUALSPEC MOD
+    // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e#diff-81dd51ee09e31ffaedc684613d189dd537d64258a1415bc0103fa26a0bc7d367
+    else if (guid.IsItem())
+    {
+        Item* pItem = GetPlayer()->GetItemByGuid(guid);
+
+        if (!pItem)
+        {
+            DEBUG_LOG("WORLD: HandleGossipSelectOptionOpcode - %s not found or you can't interact with it.", guid.GetString().c_str());
+            return;
+        }
+
+        sScriptDevAIMgr.OnGossipSelect(_player, pItem, sender, action, code.empty() ? nullptr : code.c_str());
+    }
 }
 
 void WorldSession::HandleSpiritHealerActivateOpcode(WorldPacket& recv_data)
