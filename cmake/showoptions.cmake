@@ -73,6 +73,12 @@ else()
   message(STATUS "Build Mangosbots      : No  (default)")
 endif()
 
+if(BUILD_DUALSPEC)
+  message(STATUS "Build Dual spec	    : Yes")
+else()
+  message(STATUS "Build Dual spec       : No  (default)")
+endif()
+
 if(BUILD_EXTRACTORS)
   message(STATUS "Build extractors      : Yes")
 else()

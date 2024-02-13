@@ -341,6 +341,11 @@ if(BUILD_MANGOSBOTS)
   endif()
 endif()
 
+if(NOT BUILD_GAME_SERVER AND BUILD_DUALSPEC)
+  set(BUILD_DUALSPEC OFF)
+  message(STATUS "BUILD_DUALSPEC forced to OFF due to BUILD_GAME_SERVER is not set")
+endif()
+
 if(PCH)
   if(${CMAKE_VERSION} VERSION_LESS "3.16") 
     message("PCH is not supported by your CMake version")
