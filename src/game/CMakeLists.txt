@@ -62,6 +62,17 @@ if(NOT BUILD_MANGOSBOTS)
   endforeach()
 endif()
 
+if(NOT BUILD_DUALSPEC)
+  # exclude Dualspec folder
+  set (EXCLUDE_DIR "Dualspec/")
+  foreach (TMP_PATH ${LIBRARY_SRCS})
+      string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+      if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+          list(REMOVE_ITEM LIBRARY_SRCS ${TMP_PATH})
+      endif ()
+  endforeach()
+endif()
+
 set(PCH_BASE_FILENAME "pchdef")
 # exclude pchdef files
 set (EXCLUDE_FILE "${PCH_BASE_FILENAME}")
@@ -123,7 +134,6 @@ target_include_directories(${LIBRARY_NAME}
   PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
-# This will be used for any module dependencies
 if(BUILD_MANGOSBOTS)
     include_directories(
         ${CMAKE_SOURCE_DIR}/src/game
@@ -179,17 +189,18 @@ if(BUILD_MANGOSBOTS)
         ${CMAKE_SOURCE_DIR}/src/shared/Utilities
         ${CMAKE_SOURCE_DIR}/src/shared/Log
         ${CMAKE_SOURCE_DIR}/src/shared/Threading
-    )
-endif()
-
-if(BUILD_MANGOSBOTS)
-    include_directories(
         ${CMAKE_SOURCE_DIR}/src/modules/Bots/playerbot
         ${CMAKE_SOURCE_DIR}/src/modules/Bots/ahbot
-	)
+    )
 	
 	target_link_libraries(${LIBRARY_NAME} PUBLIC Bots)
     add_dependencies(${LIBRARY_NAME} Bots)
+endif()
+
+if(BUILD_DUALSPEC)
+    include_directories(${CMAKE_SOURCE_DIR}/src/modules/Dualspec/src)
+	target_link_libraries(${LIBRARY_NAME} PUBLIC Dualspec)
+    add_dependencies(${LIBRARY_NAME} Dualspec)
 endif()
 
 if(UNIX)
@@ -222,6 +233,11 @@ endif()
 # Define ENABLE_MANGOSBOTS if need
 if (BUILD_MANGOSBOTS)
   add_definitions(-DENABLE_MANGOSBOTS)
+endif()
+
+# Define ENABLE_DUALSPEC if need
+if (BUILD_DUALSPEC)
+  add_definitions(-DENABLE_DUALSPEC)
 endif()
 
 if (MSVC)
