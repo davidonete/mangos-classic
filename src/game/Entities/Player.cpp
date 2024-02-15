@@ -73,6 +73,10 @@
 #include "PlayerbotAIConfig.h"
 #endif
 
+#ifdef ENABLE_DUALSPEC
+#include "DualSpecMgr.h"
+#endif
+
 #include <cmath>
 
 #define ZONE_UPDATE_INTERVAL (1*IN_MILLISECONDS)
@@ -693,6 +697,10 @@ Player::~Player()
     RemovePlayerbotAI();
     RemovePlayerbotMgr();
 #endif
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerLogOut(this);
+#endif
 }
 
 void Player::CleanupsBeforeDelete()
@@ -942,6 +950,10 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
         }
     }
     // all item positions resolved
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerCharacterCreated(this);
+#endif
 
     return true;
 }
@@ -3839,6 +3851,10 @@ bool Player::resetTalents(bool no_cost)
         m_resetTalentsTime = time(nullptr);
     }
 
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerResetTalents(this, cost);
+#endif
+
     // FIXME: remove pet before or after unlearn spells? for now after unlearn to allow removing of talent related, pet affecting auras
     RemovePet(PET_SAVE_REAGENTS);
     return true;
@@ -4252,6 +4268,11 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
             CharacterDatabase.PExecute("DELETE FROM character_pet WHERE owner = '%u'", lowguid);
             CharacterDatabase.PExecute("DELETE FROM guild_eventlog WHERE PlayerGuid1 = '%u' OR PlayerGuid2 = '%u'", lowguid, lowguid);
             CharacterDatabase.CommitTransaction();
+
+#ifdef ENABLE_DUALSPEC
+            sDualSpecMgr.OnPlayerCharacterDeleted(lowguid);
+#endif
+
             break;
         }
         // The character gets unlinked from the account, the name gets freed up and appears as deleted ingame
@@ -14699,6 +14720,11 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
 
 void Player::_LoadActions(std::unique_ptr<QueryResult> queryResult)
 {
+#ifdef ENABLE_DUALSPEC
+    if (sDualSpecMgr.OnPlayerLoadActionButtons(this, m_actionButtons))
+        return;
+#endif
+
     m_actionButtons.clear();
 
     // QueryResult *result = CharacterDatabase.PQuery("SELECT button,action,type FROM character_action WHERE guid = '%u' ORDER BY button",GetGUIDLow());
@@ -15840,6 +15866,10 @@ void Player::SaveToDB()
     _SaveHonorCP();
     GetSession()->SaveTutorialsData();                      // changed only while character in game
 
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerSaveToDB(this);
+#endif
+
     CharacterDatabase.CommitTransaction();
 
     // check if stats should only be saved on logout
@@ -15869,6 +15899,11 @@ void Player::SaveGoldToDB() const
 
 void Player::_SaveActions()
 {
+#ifdef ENABLE_DUALSPEC
+    if (sDualSpecMgr.OnPlayerSaveActionButtons(this, m_actionButtons))
+        return;
+#endif
+
     static SqlStatementID insertAction ;
     static SqlStatementID updateAction ;
     static SqlStatementID deleteAction ;
@@ -19844,6 +19879,10 @@ void Player::LearnTalent(uint32 talentId, uint32 talentRank)
     // learn! (other talent ranks will unlearned at learning)
     learnSpell(spellid, false, true);
     DETAIL_LOG("TalentID: %u Rank: %u Spell: %u\n", talentId, talentRank, spellid);
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerLearnTalent(this, spellid);
+#endif
 }
 
 void Player::UpdateFallInformationIfNeed(MovementInfo const& minfo, uint16 opcode)

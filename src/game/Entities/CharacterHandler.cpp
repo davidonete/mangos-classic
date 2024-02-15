@@ -50,6 +50,10 @@
 #include "PlayerbotAIConfig.h"
 #endif
 
+#ifdef ENABLE_DUALSPEC
+#include "DualSpecMgr.h"
+#endif
+
 // config option SkipCinematics supported values
 enum CinematicsSkipMode
 {
@@ -705,6 +709,10 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
     m_initialZoneUpdated = false;
 
     SetOnline();
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerLogIn(playerGuid.GetCounter());
+#endif
 
     // "GetAccountId()==db stored account id" checked in LoadFromDB (prevent login not own character using cheating tools)
     if (!pCurrChar->LoadFromDB(playerGuid, holder))

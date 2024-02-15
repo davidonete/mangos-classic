@@ -83,6 +83,10 @@
 #include "RandomPlayerbotMgr.h"
 #endif
 
+#ifdef ENABLE_DUALSPEC
+#include "DualSpecMgr.h"
+#endif
+
 #include <algorithm>
 #include <mutex>
 #include <cstdarg>
@@ -1412,6 +1416,10 @@ void World::SetInitialWorldSettings()
 
 #ifdef ENABLE_MANGOSBOTS
     sPlayerbotAIConfig.Initialize();
+#endif
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.Init();
 #endif
 
     sLog.outString("---------------------------------------");
