@@ -345,6 +345,11 @@ void WorldSession::HandleGossipHelloOpcode(WorldPacket& recv_data)
     if (pCreature->isSpiritGuide())
         pCreature->SendAreaSpiritHealerQueryOpcode(_player);
 
+#ifdef ENABLE_DUALSPEC
+    if(sDualSpecMgr.OnPlayerGossipHello(_player, pCreature))
+        return;
+#endif
+
     if (!sScriptDevAIMgr.OnGossipHello(_player, pCreature))
     {
         _player->PrepareGossipMenu(pCreature, pCreature->GetDefaultGossipMenuId());
@@ -372,7 +377,7 @@ void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
     uint32 action = _player->GetPlayerMenu()->GossipOptionAction(gossipListId);
 
 #ifdef ENABLE_DUALSPEC
-    if (sDualSpecMgr.OnPlayerGossipSelect(_player, guid, sender, action))
+    if (sDualSpecMgr.OnPlayerGossipSelect(_player, guid, sender, action, code))
         return;
 #endif
 
