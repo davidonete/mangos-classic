@@ -40,7 +40,7 @@ if(NOT BUILD_SCRIPTDEV)
   endforeach()
 endif()
 
-if(NOT BUILD_DEPRECATED_PLAYERBOT)
+if(NOT BUILD_PLAYERBOT)
   # exclude Playerbot folder
   set (EXCLUDE_DIR "PlayerBot/")
   foreach (TMP_PATH ${LIBRARY_SRCS})
@@ -51,9 +51,20 @@ if(NOT BUILD_DEPRECATED_PLAYERBOT)
   endforeach()
 endif()
 
-if(NOT BUILD_PLAYERBOTS)
-  # exclude Playerbots folder
+if(NOT BUILD_MANGOSBOTS)
+  # exclude Mangosbots folder
   set (EXCLUDE_DIR "Bots/")
+  foreach (TMP_PATH ${LIBRARY_SRCS})
+      string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+      if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+          list(REMOVE_ITEM LIBRARY_SRCS ${TMP_PATH})
+      endif ()
+  endforeach()
+endif()
+
+if(NOT BUILD_DUALSPEC)
+  # exclude Dualspec folder
+  set (EXCLUDE_DIR "Dualspec/")
   foreach (TMP_PATH ${LIBRARY_SRCS})
       string (FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
       if (NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
@@ -96,7 +107,7 @@ target_link_libraries(${LIBRARY_NAME}
 
 # include additionals headers
 # TO DO: Remove this if when old playerbots get removed
-if(NOT BUILD_PLAYERBOTS)
+if(NOT BUILD_MANGOSBOTS)
   set(ADDITIONAL_INCLUDE_DIRS
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/vmap
@@ -123,7 +134,7 @@ target_include_directories(${LIBRARY_NAME}
   PRIVATE ${Boost_INCLUDE_DIRS}
 )
 
-if(BUILD_PLAYERBOTS)
+if(BUILD_MANGOSBOTS)
     include_directories(
         ${CMAKE_SOURCE_DIR}/src/game
         ${CMAKE_SOURCE_DIR}/src/game/AI
@@ -186,6 +197,12 @@ if(BUILD_PLAYERBOTS)
     add_dependencies(${LIBRARY_NAME} Bots)
 endif()
 
+if(BUILD_DUALSPEC)
+    include_directories(${CMAKE_SOURCE_DIR}/src/modules/Dualspec/src)
+	target_link_libraries(${LIBRARY_NAME} PUBLIC Dualspec)
+    add_dependencies(${LIBRARY_NAME} Dualspec)
+endif()
+
 if(UNIX)
   # Both systems don't have libdl and don't need them
   if (NOT (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD" OR CMAKE_SYSTEM_NAME STREQUAL "NetBSD"))
@@ -208,14 +225,19 @@ if (BUILD_METRICS)
   add_definitions(-DBUILD_METRICS)
 endif()
 
-# Define BUILD_DEPRECATED_PLAYERBOT if need
-if (BUILD_DEPRECATED_PLAYERBOT)
-  add_definitions(-DBUILD_DEPRECATED_PLAYERBOT)
+# Define BUILD_PLAYERBOT if need
+if (BUILD_PLAYERBOT)
+  add_definitions(-DBUILD_PLAYERBOT)
 endif()
 
-# Define ENABLE_PLAYERBOTS if need
-if (BUILD_PLAYERBOTS)
-  add_definitions(-DENABLE_PLAYERBOTS)
+# Define ENABLE_MANGOSBOTS if need
+if (BUILD_MANGOSBOTS)
+  add_definitions(-DENABLE_MANGOSBOTS)
+endif()
+
+# Define ENABLE_DUALSPEC if need
+if (BUILD_DUALSPEC)
+  add_definitions(-DENABLE_DUALSPEC)
 endif()
 
 if (MSVC)

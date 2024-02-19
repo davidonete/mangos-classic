@@ -50,6 +50,10 @@
 #include "PlayerbotAIConfig.h"
 #endif
 
+#ifdef ENABLE_DUALSPEC
+#include "DualSpecMgr.h"
+#endif
+
 // config option SkipCinematics supported values
 enum CinematicsSkipMode
 {

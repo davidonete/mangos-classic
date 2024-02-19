@@ -83,6 +83,10 @@
 #include "RandomPlayerbotMgr.h"
 #endif
 
+#ifdef ENABLE_DUALSPEC
+#include "DualSpecMgr.h"
+#endif
+
 #include <algorithm>
 #include <mutex>
 #include <cstdarg>
@@ -1416,6 +1420,10 @@ void World::SetInitialWorldSettings()
 	
 #ifdef BUILD_DEPRECATED_PLAYERBOT
     PlayerbotMgr::SetInitialWorldSettings();
+#endif
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.Init();
 #endif
 
     sLog.outString("---------------------------------------");

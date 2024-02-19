@@ -59,3 +59,33 @@ else()
     file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/modules/Bots)
   endif()
 endif()
+
+# Dual spec module
+if(BUILD_DUALSPEC)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    dualspec
+    GIT_REPOSITORY "https://github.com/davidonete/cmangos-dual-spec.git"
+	GIT_TAG "main"
+  )
+
+  if(NOT dualspec_POPULATED)
+	message(STATUS "Fetching Dual spec module...")
+  
+    FetchContent_Populate(dualspec)
+	
+	if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec)
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec)
+    endif()
+	
+	file(COPY ${dualspec_SOURCE_DIR}/. DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec)
+    message(STATUS "Dual spec module fetched and populated in ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec")
+  endif()
+
+  add_subdirectory(modules/Dualspec)
+else()
+  if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec)
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_SOURCE_DIR}/modules/Dualspec)
+  endif()
+endif()

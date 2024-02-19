@@ -81,6 +81,9 @@ struct Script
 {
     Script() :
         pGossipHello(nullptr), pGossipHelloGO(nullptr), pGossipSelect(nullptr), pGossipSelectGO(nullptr),
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e#diff-81dd51ee09e31ffaedc684613d189dd537d64258a1415bc0103fa26a0bc7d367
+        pGossipSelectItem(nullptr), pGossipSelectItemWithCode(nullptr),
         pGossipSelectWithCode(nullptr), pGossipSelectGOWithCode(nullptr),
         pDialogStatusNPC(nullptr), pDialogStatusGO(nullptr),
         pQuestAcceptNPC(nullptr), pQuestAcceptGO(nullptr), pQuestAcceptItem(nullptr),
@@ -96,6 +99,10 @@ struct Script
     bool (*pGossipHelloGO)(Player*, GameObject*);
     bool (*pGossipSelect)(Player*, Creature*, uint32, uint32);
     bool (*pGossipSelectGO)(Player*, GameObject*, uint32, uint32);
+    // DUALSPEC MOD
+    // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e#diff-81dd51ee09e31ffaedc684613d189dd537d64258a1415bc0103fa26a0bc7d367
+    bool (*pGossipSelectItem)(Player*, Item*, uint32, uint32);
+    bool (*pGossipSelectItemWithCode)(Player*, Item*, uint32, uint32, const char*);
     bool (*pGossipSelectWithCode)(Player*, Creature*, uint32, uint32, const char*);
     bool (*pGossipSelectGOWithCode)(Player*, GameObject*, uint32, uint32, const char*);
     uint32(*pDialogStatusNPC)(const Player*, const Creature*);
@@ -140,6 +147,9 @@ class ScriptDevAIMgr
         bool OnGossipHello(Player* pPlayer, GameObject* pGo);
         bool OnGossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* code);
         bool OnGossipSelect(Player* pPlayer, GameObject* pGo, uint32 uiSender, uint32 uiAction, const char* code);
+        // DUALSPEC MOD
+        // https://github.com/cmangos/mangos-classic/commit/d1facfeb000dba71495c2abb1a1b1215933d4d7e#diff-81dd51ee09e31ffaedc684613d189dd537d64258a1415bc0103fa26a0bc7d367
+        bool OnGossipSelect(Player* pPlayer, Item* pItem, uint32 sender, uint32 action, const char* code);
         bool OnQuestAccept(Player* pPlayer, Creature* pCreature, Quest const* pQuest);
         bool OnQuestAccept(Player* pPlayer, GameObject* pGo, Quest const* pQuest);
         bool OnQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest);
