@@ -951,10 +951,6 @@ bool Player::Create(uint32 guidlow, const std::string& name, uint8 race, uint8 c
     }
     // all item positions resolved
 
-#ifdef ENABLE_DUALSPEC
-    sDualSpecMgr.OnPlayerCharacterCreated(this);
-#endif
-
     return true;
 }
 
@@ -14200,6 +14196,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
         return false;
     }
 
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerPreLoadFromDB(guid.GetCounter());
+#endif
+
     // overwrite possible wrong/corrupted guid
     SetGuidValue(OBJECT_FIELD_GUID, guid);
 
@@ -14714,6 +14714,10 @@ bool Player::LoadFromDB(ObjectGuid guid, SqlQueryHolder* holder)
                 break;
         }
     }
+
+#ifdef ENABLE_DUALSPEC
+    sDualSpecMgr.OnPlayerPostLoadFromDB(this);
+#endif
 
     return true;
 }

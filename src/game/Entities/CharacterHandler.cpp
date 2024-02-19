@@ -710,10 +710,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 
     SetOnline();
 
-#ifdef ENABLE_DUALSPEC
-    sDualSpecMgr.OnPlayerLogIn(playerGuid.GetCounter());
-#endif
-
     // "GetAccountId()==db stored account id" checked in LoadFromDB (prevent login not own character using cheating tools)
     if (!pCurrChar->LoadFromDB(playerGuid, holder))
     {
