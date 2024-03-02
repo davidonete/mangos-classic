@@ -51,14 +51,6 @@
 #include "playerbot/PlayerbotAIConfig.h"
 #endif
 
-#ifdef ENABLE_ACHIEVEMENTS
-#include "AchievementsMgr.h"
-#endif
-
-#ifdef ENABLE_TRANSMOG
-#include "TransmogMgr.h"
-#endif
-
 // config option SkipCinematics supported values
 enum CinematicsSkipMode
 {
@@ -750,10 +742,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
 
     SetOnline();
 
-#ifdef ENABLE_ACHIEVEMENTS
-    sAchievementsMgr.OnPlayerLogin(pCurrChar, playerGuid.GetCounter());
-#endif
-
     // "GetAccountId()==db stored account id" checked in LoadFromDB (prevent login not own character using cheating tools)
     if (!pCurrChar->LoadFromDB(playerGuid, holder))
     {
@@ -1099,10 +1087,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder* holder)
         }
     }
     //End Solocraft Functions
-
-#ifdef ENABLE_TRANSMOG
-    sTransmogMgr.OnPlayerLogin(pCurrChar);
-#endif
 
     m_playerLoading = false;
     delete holder;
