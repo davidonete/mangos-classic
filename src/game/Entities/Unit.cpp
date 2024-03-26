@@ -2675,7 +2675,7 @@ void Unit::DoExtraAttacks(Unit* pVictim)
         swingError = SWING_ERROR_BAD_FACING;
     else if (!pVictim->IsAlive())
         swingError = SWING_ERROR_TARGET_NOT_ALIVE;
-    else if (!CanAttackInCombat(pVictim))
+    else if (!CanAttackInCombat(pVictim, false, false))
         swingError = SWING_ERROR_CANT_ATTACK_TARGET;
 
     if (swingError)
