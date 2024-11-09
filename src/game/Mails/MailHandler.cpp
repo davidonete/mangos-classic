@@ -272,7 +272,7 @@ void WorldSession::HandleSendMail(WorldPacket& recv_data)
     CharacterDatabase.CommitTransaction();
 
 #ifdef ENABLE_MODULES
-    sModuleMgr.OnSendMail(pl, rc, reqmoney);
+    sModuleMgr.OnSendMail(draft, pl, rc, reqmoney);
 #endif
 }
 
@@ -444,6 +444,10 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recv_data)
     InventoryResult msg = _player->CanStoreItem(NULL_BAG, NULL_SLOT, dest, it, false);
     if (msg == EQUIP_ERR_OK)
     {
+#ifdef ENABLE_MODULES
+        sModuleMgr.OnMailTakeItem(m, pl, it, ObjectGuid(HIGHGUID_PLAYER, m->sender));
+#endif
+
         m->RemoveItem(itemGuid);
         m->removedItems.push_back(itemGuid);
 
@@ -527,6 +531,10 @@ void WorldSession::HandleMailTakeMoney(WorldPacket& recv_data)
     }
 
     pl->SendMailResult(mailId, MAIL_MONEY_TAKEN, MAIL_OK);
+
+#ifdef ENABLE_MODULES
+    sModuleMgr.OnMailTakeMoney(m, pl, m->money, ObjectGuid(HIGHGUID_PLAYER, m->sender));
+#endif
 
     pl->ModifyMoney(m->money);
     m->money = 0;
