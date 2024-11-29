@@ -4088,16 +4088,9 @@ void Player::DeleteFromDB(ObjectGuid playerguid, uint32 accountId, bool updateRe
 
     // remove from guild
     if (uint32 guildId = GetGuildIdFromDB(playerguid))
-    {
         if (Guild* guild = sGuildMgr.GetGuildById(guildId))
-        {
             if (guild->DelMember(playerguid))
-            {
                 guild->Disband();
-                delete guild;
-            }
-        }
-    }
 
     // the player was uninvited already on logout so just remove from group
     auto resultGroup = CharacterDatabase.PQuery("SELECT groupId FROM group_member WHERE memberGuid='%u'", lowguid);
@@ -18469,7 +18462,7 @@ BattleGround* Player::GetBattleGround() const
     if (GetBattleGroundId() == 0)
         return nullptr;
 
-    return sBattleGroundMgr.GetBattleGround(GetBattleGroundId(), m_bgData.bgTypeID);
+    return GetMap()->GetBG();
 }
 
 bool Player::GetBGAccessByLevel(BattleGroundTypeId bgTypeId) const
@@ -18483,41 +18476,6 @@ bool Player::GetBGAccessByLevel(BattleGroundTypeId bgTypeId) const
         return false;
 
     return true;
-}
-
-uint32 Player::GetMinLevelForBattleGroundBracketId(BattleGroundBracketId bracket_id, BattleGroundTypeId bgTypeId)
-{
-    if (bracket_id < 1)
-        return 0;
-
-    if (bracket_id > BG_BRACKET_ID_LAST)
-        bracket_id = BG_BRACKET_ID_LAST;
-
-    BattleGround* bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId);
-    assert(bg);
-    return 10 * bracket_id + bg->GetMinLevel();
-}
-
-uint32 Player::GetMaxLevelForBattleGroundBracketId(BattleGroundBracketId bracket_id, BattleGroundTypeId bgTypeId)
-{
-    if (bracket_id >= BG_BRACKET_ID_LAST)
-        return 255;                                         // hardcoded max level
-
-    return GetMinLevelForBattleGroundBracketId(bracket_id, bgTypeId) + 10;
-}
-
-BattleGroundBracketId Player::GetBattleGroundBracketIdFromLevel(BattleGroundTypeId bgTypeId) const
-{
-    BattleGround* bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId);
-    assert(bg);
-    if (GetLevel() < bg->GetMinLevel())
-        return BG_BRACKET_ID_FIRST;
-
-    uint32 bracket_id = (GetLevel() - bg->GetMinLevel()) / 10;
-    if (bracket_id > MAX_BATTLEGROUND_BRACKETS)
-        return BG_BRACKET_ID_LAST;
-
-    return BattleGroundBracketId(bracket_id);
 }
 
 float Player::GetReputationPriceDiscount(Creature const* creature) const
@@ -19444,7 +19402,7 @@ void Player::learnClassLevelSpells(bool includeHighLevelQuestRewards)
     ObjectMgr::QuestMap const& qTemplates = sObjectMgr.GetQuestTemplates();
     for (const auto& qTemplate : qTemplates)
     {
-        Quest const* quest = qTemplate.second;
+        Quest const* quest = qTemplate.second.get();
         if (!quest)
             continue;
 
@@ -20181,7 +20139,7 @@ AreaLockStatus Player::GetAreaTriggerLockStatus(AreaTrigger const* at, uint32& m
     }
 
     if (at->entry == 2532 || at->entry == 2527) // champions hall and hall of legends - need pvp rank
-        if (GetHonorRankInfo().rank < ENTER_HALL_RANK)
+        if (GetHonorRankInfo().visualRank < ENTER_HALL_RANK)
             return AREA_LOCKSTATUS_PVP_RANK;
 
     // If the map is not created, assume it is possible to enter it.

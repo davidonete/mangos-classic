@@ -263,12 +263,16 @@ BattleGround::~BattleGround()
 {
     // remove objects and creatures
     // (this is done automatically in mapmanager update, when the instance is reset after the reset time)
-    sBattleGroundMgr.RemoveBattleGround(GetInstanceId(), GetTypeId());
 
     // skip template bgs as they were never added to visible bg list
     BattleGroundBracketId bracketId = GetBracketId();
     if (bracketId != BG_BRACKET_ID_TEMPLATE)
-        sBattleGroundMgr.DeleteClientVisibleInstanceId(GetTypeId(), bracketId, GetClientInstanceId());
+    {
+        sWorld.GetBGQueue().GetMessager().AddMessage([bgTypeId = GetTypeId(), bracketId, clientInstanceId = GetClientInstanceId()](BattleGroundQueue* queue)
+        {
+            queue->DeleteClientVisibleInstanceId(bgTypeId, bracketId, clientInstanceId);
+        });
+    }
 
     // unload map
     // map can be null at bg destruction
@@ -276,7 +280,7 @@ BattleGround::~BattleGround()
         m_bgMap->SetUnload();
 
     // remove from bg free slot queue
-    this->RemoveFromBgFreeSlotQueue();
+    this->RemovedFromBgFreeSlotQueue(true);
 
     for (BattleGroundScoreMap::const_iterator itr = m_playerScores.begin(); itr != m_playerScores.end(); ++itr)
         delete itr->second;
@@ -696,7 +700,7 @@ void BattleGround::UpdateWorldStateForPlayer(uint32 field, uint32 value, Player*
 */
 void BattleGround::EndBattleGround(Team winner)
 {
-    this->RemoveFromBgFreeSlotQueue();
+    this->RemovedFromBgFreeSlotQueue(true);
 
     uint32 loser_rating = 0;
     uint32 winner_rating = 0;
@@ -802,7 +806,7 @@ void BattleGround::EndBattleGround(Team winner)
         {
             static SqlStatementID insPvPstatsPlayer;
             BattleGroundScoreMap::iterator score = m_playerScores.find(m_Player.first);
-            SqlStatement stmt = CharacterDatabase.CreateStatement(insPvPstatsPlayer, "INSERT INTO pvpstats_players (battleground_id, character_guid, score_killing_blows, score_deaths, score_honorable_kills, score_bonus_honor, score_damage_done, attr_1, attr_2, attr_3, attr_4, attr_5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            SqlStatement stmt = CharacterDatabase.CreateStatement(insPvPstatsPlayer, "INSERT INTO pvpstats_players (battleground_id, character_guid, score_killing_blows, score_deaths, score_honorable_kills, score_bonus_honor, score_damage_done, attr_1, attr_2, attr_3, attr_4, attr_5) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
             stmt.addUInt32(battleground_id);
             stmt.addUInt32(plr->GetGUIDLow());
@@ -837,7 +841,7 @@ void BattleGround::EndBattleGround(Team winner)
         plr->GetSession()->SendPacket(data);
 
         BattleGroundQueueTypeId bgQueueTypeId = BattleGroundMgr::BgQueueTypeId(GetTypeId());
-        sBattleGroundMgr.BuildBattleGroundStatusPacket(data, this, plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime());
+        sBattleGroundMgr.BuildBattleGroundStatusPacket(data, true, GetTypeId(), GetClientInstanceId(), GetMapId(), plr->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, TIME_TO_AUTOREMOVE, GetStartTime());
         plr->GetSession()->SendPacket(data);
     }
 
@@ -859,6 +863,16 @@ uint32 BattleGround::GetBonusHonorFromKill(uint32 kills) const
 {
     // variable kills means how many honorable kills you scored (so we need kills * honor_for_one_kill)
     return (uint32)MaNGOS::Honor::hk_honor_at_level(GetMaxLevel(), kills);
+}
+
+void BattleGround::SetStatus(BattleGroundStatus status)
+{
+    m_status = status;
+    sWorld.GetBGQueue().GetMessager().AddMessage([status, bgTypeId = GetTypeId(), instanceId = GetInstanceId()](BattleGroundQueue* queue)
+    {
+        if (BattleGroundInQueueInfo* bgInstance = queue->GetFreeSlotInstance(bgTypeId, instanceId))
+            bgInstance->status = status;
+    });
 }
 
 /**
@@ -1093,7 +1107,7 @@ void BattleGround::RemovePlayerAtLeave(ObjectGuid playerGuid, bool isOnTransport
             if (doSendPacket)
             {
                 WorldPacket data;
-                sBattleGroundMgr.BuildBattleGroundStatusPacket(data, this, player->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_NONE, 0, 0);
+                sBattleGroundMgr.BuildBattleGroundStatusPacket(data, true, GetTypeId(), GetClientInstanceId(), GetMapId(), player->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_NONE, 0, 0);
                 player->GetSession()->SendPacket(data);
             }
 
@@ -1110,13 +1124,24 @@ void BattleGround::RemovePlayerAtLeave(ObjectGuid playerGuid, bool isOnTransport
                 delete group;
             }
         }
-        DecreaseInvitedCount(team);
+
+        SetInvitedCount(team, GetInvitedCount(team) - 1); // change ahead of free slot queue - will be synched again after
         // we should update battleground queue, but only if bg isn't ending
         if (GetStatus() < STATUS_WAIT_LEAVE)
         {
             // a player has left the battleground, so there are free slots -> add to queue
-            AddToBgFreeSlotQueue();
-            sBattleGroundMgr.ScheduleQueueUpdate(bgQueueTypeId, bgTypeId, GetBracketId());
+            if (!AddToBgFreeSlotQueue()) // avoid setting two messages - if was already in queue, just update count
+            {
+                sWorld.GetBGQueue().GetMessager().AddMessage([bgTypeId, instanceId = GetInstanceId(), team](BattleGroundQueue* queue)
+                {
+                    if (BattleGroundInQueueInfo* bgInstance = queue->GetFreeSlotInstance(bgTypeId, instanceId))
+                        bgInstance->DecreaseInvitedCount(team);
+                });
+            }
+            sWorld.GetBGQueue().GetMessager().AddMessage([bgQueueTypeId, bgTypeId, bracketId = GetBracketId()](BattleGroundQueue* queue)
+            {
+                queue->ScheduleQueueUpdate(bgQueueTypeId, bgTypeId, bracketId);
+            });
         }
 
         // Let others know
@@ -1181,8 +1206,7 @@ void BattleGround::StartBattleGround()
 {
     SetStartTime(0);
 
-    // add BG to free slot queue
-    AddToBgFreeSlotQueue();
+    // expects to be already added in free queue
 
     // add bg to update list
     // This must be done here, because we need to have already invited some players when first BG::Update() method is executed
@@ -1310,33 +1334,45 @@ void BattleGround::EventPlayerLoggedOut(Player* player)
 /**
   Function that returns the number of players that can join a battleground based on the provided team
 */
-void BattleGround::AddToBgFreeSlotQueue()
+bool BattleGround::AddToBgFreeSlotQueue()
 {
     // make sure to add only once
     if (!m_hasBgFreeSlotQueue)
     {
-        sBattleGroundMgr.BgFreeSlotQueue[m_typeId].push_front(this);
         m_hasBgFreeSlotQueue = true;
+        BattleGroundInQueueInfo bgInfo;
+        bgInfo.Fill(this);
+        sWorld.GetBGQueue().GetMessager().AddMessage([bgInfo](BattleGroundQueue* queue)
+        {
+            queue->AddBgToFreeSlots(bgInfo);
+        });
+        return true;
     }
+    return false;
 }
 
 /**
   Method that removes this battleground from free queue - it must be called when deleting battleground
 */
-void BattleGround::RemoveFromBgFreeSlotQueue()
+void BattleGround::RemovedFromBgFreeSlotQueue(bool removeFromQueue)
 {
     // set to be able to re-add if needed
-    m_hasBgFreeSlotQueue = false;
-    BgFreeSlotQueueType& bgFreeSlot = sBattleGroundMgr.BgFreeSlotQueue[m_typeId];
-
-    for (BgFreeSlotQueueType::iterator itr = bgFreeSlot.begin(); itr != bgFreeSlot.end(); ++itr)
+    if (m_hasBgFreeSlotQueue && removeFromQueue)
     {
-        if ((*itr)->GetInstanceId() == GetInstanceId())
+        sWorld.GetBGQueue().GetMessager().AddMessage([bgTypeId = GetTypeId(), instanceId = GetInstanceId()](BattleGroundQueue* queue)
         {
-            bgFreeSlot.erase(itr);
-            return;
-        }
+            queue->RemoveBgFromFreeSlots(bgTypeId, instanceId);
+        });
     }
+    m_hasBgFreeSlotQueue = false;
+}
+
+void BattleGround::SetInvitedCount(Team team, uint32 count)
+{
+    if (team == ALLIANCE)
+        m_invitedAlliance = count;
+    else
+        m_invitedHorde = count;
 }
 
 /**
@@ -1457,7 +1493,7 @@ Team BattleGround::GetPrematureWinner()
 */
 void BattleGround::OnObjectDBLoad(Creature* creature)
 {
-    const BattleGroundEventIdx eventId = sBattleGroundMgr.GetCreatureEventIndex(creature->GetDbGuid());
+    const BattleGroundEventIdx eventId = GetBgMap()->GetMapDataContainer().GetCreatureEventIndex(creature->GetDbGuid());
     if (eventId.event1 == BG_EVENT_NONE)
         return;
 
@@ -1505,7 +1541,7 @@ uint32 BattleGround::GetSingleGameObjectGuid(uint8 event1, uint8 event2)
 */
 void BattleGround::OnObjectDBLoad(GameObject* obj)
 {
-    const BattleGroundEventIdx eventId = sBattleGroundMgr.GetGameObjectEventIndex(obj->GetDbGuid());
+    const BattleGroundEventIdx eventId = GetBgMap()->GetMapDataContainer().GetGameObjectEventIndex(obj->GetDbGuid());
     if (eventId.event1 == BG_EVENT_NONE)
         return;
 
@@ -1762,7 +1798,7 @@ void BattleGround::SendBcdToTeam(int32 bcdEntry, ChatMsg msgtype, Creature const
 */
 void BattleGround::EndNow()
 {
-    RemoveFromBgFreeSlotQueue();
+    RemovedFromBgFreeSlotQueue(true);
     SetStatus(STATUS_WAIT_LEAVE);
     SetEndTime(0);
 }
@@ -1855,6 +1891,8 @@ void BattleGround::PlayerAddedToBgCheckIfBgIsRunning(Player* player)
     sBattleGroundMgr.BuildPvpLogDataPacket(data, this);
     player->GetSession()->SendPacket(data);
 
+    sBattleGroundMgr.BuildBattleGroundStatusPacket(data, true, GetTypeId(), GetClientInstanceId(), GetMapId(), player->GetBattleGroundQueueIndex(bgQueueTypeId), STATUS_IN_PROGRESS, GetEndTime(), GetStartTime());
+    player->GetSession()->SendPacket(data);
 }
 
 /**

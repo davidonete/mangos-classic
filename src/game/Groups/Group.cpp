@@ -31,8 +31,8 @@
 #include "BattleGround/BattleGround.h"
 #include "Maps/MapManager.h"
 #include "Maps/MapPersistentStateMgr.h"
-#include "LFG/LFGMgr.h"
-#include "LFG/LFGQueue.h"
+#include "Spells/SpellAuras.h"
+#include "BattleGround/BattleGroundMgr.h"
 #ifdef BUILD_DEPRECATED_PLAYERBOT
 #include "PlayerBot/Base/PlayerbotMgr.h"
 #endif
@@ -71,7 +71,7 @@ GroupMemberStatus GetGroupMemberStatus(const Player* member = nullptr)
 
 Group::Group() : m_Id(0), m_groupFlags(GROUP_FLAG_NORMAL),
     m_bgGroup(nullptr), m_lootMethod(FREE_FOR_ALL), m_lootThreshold(ITEM_QUALITY_UNCOMMON),
-    m_subGroupsCounts(nullptr), m_leaderLastOnline(0), m_LFGAreaId(0)
+    m_subGroupsCounts(nullptr), m_scriptRef(this, NoopGroupDeleter()), m_leaderLastOnline(0), m_LFGAreaId(0)
 {
 }
 
@@ -1281,7 +1281,7 @@ uint32 Group::CanJoinBattleGroundQueue(BattleGroundTypeId bgTypeId, BattleGround
     if (!reference)
         return BG_JOIN_ERR_OFFLINE_MEMBER;
 
-    BattleGroundBracketId bracket_id = reference->GetBattleGroundBracketIdFromLevel(bgTypeId);
+    BattleGroundBracketId bracket_id = sBattleGroundMgr.GetBattleGroundBracketIdFromLevel(bgTypeId, reference->GetLevel());
     Team team = reference->GetTeam();
 
     // check every member of the group to be able to join
@@ -1295,7 +1295,7 @@ uint32 Group::CanJoinBattleGroundQueue(BattleGroundTypeId bgTypeId, BattleGround
         if (member->GetTeam() != team)
             return BG_JOIN_ERR_MIXED_FACTION;
         // not in the same battleground level bracket, don't let join
-        if (member->GetBattleGroundBracketIdFromLevel(bgTypeId) != bracket_id)
+        if (sBattleGroundMgr.GetBattleGroundBracketIdFromLevel(bgTypeId, member->GetLevel()) != bracket_id)
             return BG_JOIN_ERR_MIXED_LEVELS;
         // don't let join if someone from the group is already in that bg queue
         if (member->InBattleGroundQueueForBattleGroundQueueType(bgQueueTypeId))

@@ -31,6 +31,7 @@
 #include "Multithreading/Messager.h"
 #include "Globals/GraveyardManager.h"
 #include "LFG/LFGQueue.h"
+#include "BattleGround/BattleGroundQueue.h"
 
 #include <set>
 #include <list>
@@ -351,6 +352,7 @@ enum eConfigBoolValues
     CONFIG_BOOL_LFG_MATCHMAKING,
     CONFIG_BOOL_ALWAYS_SHOW_QUEST_GREETING,
     CONFIG_BOOL_DISABLE_INSTANCE_RELOCATE,
+    CONFIG_BOOL_PRELOAD_MMAP_TILES,
     CONFIG_BOOL_VALUE_COUNT
 };
 
@@ -364,41 +366,6 @@ enum RealmType
     REALM_TYPE_RPPVP = 8,
     REALM_TYPE_FFA_PVP = 16                                 // custom, free for all pvp mode like arena PvP in all zones except rest activated places and sanctuaries
                          // replaced by REALM_PVP in realm list
-};
-
-// [-ZERO] Need drop not existed cases
-enum RealmZone
-{
-    REALM_ZONE_UNKNOWN       = 0,                           // any language
-    REALM_ZONE_DEVELOPMENT   = 1,                           // any language
-    REALM_ZONE_UNITED_STATES = 2,                           // extended-Latin
-    REALM_ZONE_OCEANIC       = 3,                           // extended-Latin
-    REALM_ZONE_LATIN_AMERICA = 4,                           // extended-Latin
-    REALM_ZONE_TOURNAMENT_5  = 5,                           // basic-Latin at create, any at login
-    REALM_ZONE_KOREA         = 6,                           // East-Asian
-    REALM_ZONE_TOURNAMENT_7  = 7,                           // basic-Latin at create, any at login
-    REALM_ZONE_ENGLISH       = 8,                           // extended-Latin
-    REALM_ZONE_GERMAN        = 9,                           // extended-Latin
-    REALM_ZONE_FRENCH        = 10,                          // extended-Latin
-    REALM_ZONE_SPANISH       = 11,                          // extended-Latin
-    REALM_ZONE_RUSSIAN       = 12,                          // Cyrillic
-    REALM_ZONE_TOURNAMENT_13 = 13,                          // basic-Latin at create, any at login
-    REALM_ZONE_TAIWAN        = 14,                          // East-Asian
-    REALM_ZONE_TOURNAMENT_15 = 15,                          // basic-Latin at create, any at login
-    REALM_ZONE_CHINA         = 16,                          // East-Asian
-    REALM_ZONE_CN1           = 17,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN2           = 18,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN3           = 19,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN4           = 20,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN5           = 21,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN6           = 22,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN7           = 23,                          // basic-Latin at create, any at login
-    REALM_ZONE_CN8           = 24,                          // basic-Latin at create, any at login
-    REALM_ZONE_TOURNAMENT_25 = 25,                          // basic-Latin at create, any at login
-    REALM_ZONE_TEST_SERVER   = 26,                          // any language
-    REALM_ZONE_TOURNAMENT_27 = 27,                          // basic-Latin at create, any at login
-    REALM_ZONE_QA_SERVER     = 28,                          // any language
-    REALM_ZONE_CN9           = 29                           // basic-Latin at create, any at login
 };
 
 /// Storage class for commands issued for delayed execution
@@ -634,7 +601,9 @@ class World
         void SendGMTextFlags(uint32 accountFlag, int32 stringId, std::string type, const char* message);
 
         LFGQueue& GetLFGQueue() { return m_lfgQueue; }
+        BattleGroundQueue& GetBGQueue() { return m_bgQueue; }
         void StartLFGQueueThread();
+        void StartBGQueueThread();
     protected:
         void _UpdateGameTime();
         // callback for UpdateRealmCharacters
@@ -754,9 +723,11 @@ class World
 
         GraveyardManager m_graveyardManager;
 
-        // Housing this here but logically it is completely asynchronous - TODO: Separate this and unify with BG queue
+        // Housing this here but logically it is completely asynchronous
         LFGQueue m_lfgQueue;
         std::thread m_lfgQueueThread;
+        BattleGroundQueue m_bgQueue;
+        std::thread m_bgQueueThread;
 };
 
 extern uint32 realmID;
