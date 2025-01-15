@@ -6478,12 +6478,12 @@ void Player::RewardReputation(Quest const* pQuest)
         {
             int32 rep = CalculateReputationGain(REPUTATION_SOURCE_QUEST,  pQuest->RewRepValue[i], pQuest->RewRepFaction[i], GetQuestLevelForPlayer(pQuest));
 
+            bool noSpillover = (pQuest->GetReputationSpilloverMask() & (1 << i)) != 0;
+
             if (FactionEntry const* factionEntry = sFactionStore.LookupEntry(pQuest->RewRepFaction[i]))
-                GetReputationMgr().ModifyReputation(factionEntry, rep);
+                GetReputationMgr().ModifyReputation(factionEntry, rep, noSpillover);
         }
     }
-
-    // TODO: implement reputation spillover
 }
 
 // Update honor fields , cleanKills is only used during char saving
@@ -19028,6 +19028,20 @@ void Player::ResurrectUsingRequestDataFinish()
     SetPower(POWER_ENERGY, GetMaxPower(POWER_ENERGY));
 
     SpawnCorpseBones();
+}
+
+void Player::SetCanFly(bool enable)
+{
+    if (enable)
+    {
+        m_movementInfo.moveFlags = (MOVEFLAG_LEVITATING | MOVEFLAG_SWIMMING | MOVEFLAG_CAN_FLY | MOVEFLAG_FLYING);
+    }
+    else
+    {
+        m_movementInfo.moveFlags = (MOVEFLAG_NONE);
+    }
+
+    SendHeartBeat();
 }
 
 void Player::UpdateClientControl(Unit const* target, bool enabled, bool forced) const
