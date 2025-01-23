@@ -2371,6 +2371,10 @@ void Player::Regenerate(Powers power, uint32 diff)
             break;
     }
 
+#ifdef ENABLE_MODULES
+    sModuleMgr.OnRegenerate(this, power, diff, addvalue);
+#endif
+
     if (power != POWER_RAGE)
     {
         curValue += uint32(addvalue);
