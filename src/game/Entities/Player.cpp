@@ -2750,6 +2750,10 @@ void Player::GiveLevel(uint32 level)
     PlayerClassLevelInfo classInfo;
     sObjectMgr.GetPlayerClassLevelInfo(plClass, level, &classInfo);
 
+#ifdef ENABLE_MODULES
+    sModuleMgr.OnGetPlayerClassLevelInfo(this, classInfo);
+#endif
+
     // send levelup info to client
     WorldPacket data(SMSG_LEVELUP_INFO, (4 + 4 + MAX_POWERS * 4 + MAX_STATS * 4));
     data << uint32(level);
@@ -2852,6 +2856,10 @@ void Player::InitStatsForLevel(bool reapplyMods)
     uint32 level = GetLevel();
     uint32 plClass = getClass();
     sObjectMgr.GetPlayerClassLevelInfo(plClass, level, &classInfo);
+
+#ifdef ENABLE_MODULES
+    sModuleMgr.OnGetPlayerClassLevelInfo(this, classInfo);
+#endif
 
     PlayerLevelInfo info;
     sObjectMgr.GetPlayerLevelInfo(getRace(), plClass, level, &info);
